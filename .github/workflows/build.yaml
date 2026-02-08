@@ -1,14 +1,9 @@
-name: build
+name: Build
 
 on:
   push:
-    branches:
-      - main
-    tags-ignore:
+    tags:
       - v*
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -16,6 +11,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Log in to docker repository
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Go
         uses: actions/setup-go@v6
