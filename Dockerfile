@@ -7,11 +7,10 @@ RUN go mod download && go mod verify
 
 ADD . ./
 
-RUN go build -o ./cmd/speedtest_exporter/
-
+RUN go build -o /build/speedtest_exporter ./cmd/speedtest_exporter
 FROM alpine:3.23
 
-COPY --from=build /usr/src/cmd/speedtest_exporter /usr/local/bin/speedtest_exporter
+COPY --from=build /build/speedtest_exporter /usr/local/bin/speedtest_exporter
 RUN apk upgrade --no-cache \
     && apk add tzdata
 
