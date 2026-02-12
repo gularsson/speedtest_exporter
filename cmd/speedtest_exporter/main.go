@@ -46,19 +46,20 @@ func main() {
 		client := http.Client{
 			Timeout: 3 * time.Second,
 		}
-		_, err := client.Get("https://clients3.google.com/generate_204")
+		resp, err := client.Get("https://clients3.google.com/generate_204")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = fmt.Fprint(w, "No Internet Connection")
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, _ = fmt.Fprint(w, "OK")
+			return
 		}
+		resp.Body.Close()
+		w.WriteHeader(http.StatusOK)
+		_, _ = fmt.Fprint(w, "OK")
 	})
 
 	http.Handle(metricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{
 		MaxRequestsInFlight: 1,
-		Timeout:             60 * time.Second,
+		Timeout:             120 * time.Second,
 	}))
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
