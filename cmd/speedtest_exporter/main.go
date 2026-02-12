@@ -52,7 +52,7 @@ func main() {
 			_, _ = fmt.Fprint(w, "No Internet Connection")
 			return
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		w.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprint(w, "OK")
 	})
