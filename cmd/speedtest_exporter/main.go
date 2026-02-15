@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/danopstech/speedtest_exporter/internal/bbk"
 	"github.com/danopstech/speedtest_exporter/internal/exporter"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -18,17 +19,26 @@ const (
 
 func main() {
 	port := flag.String("port", "9090", "listening port to expose metrics on")
+	backend := flag.String("backend", "speedtest", "Measurement backend: speedtest or bbk")
 	serverID := flag.Int("server_id", -1, "Speedtest.net server ID to run test against, -1 will pick the closest server to your location")
 	serverFallback := flag.Bool("server_fallback", false, "If the server_id given is not available, should we fallback to closest available server")
+	bbkBinary := flag.String("bbk_binary", "/usr/local/bin/bbk", "Path to the bbk CLI binary")
 	flag.Parse()
 
-	exporter, err := exporter.New(*serverID, *serverFallback)
-	if err != nil {
-		panic(err)
-	}
-
 	r := prometheus.NewRegistry()
-	r.MustRegister(exporter)
+
+	switch *backend {
+	case "speedtest":
+		exp, err := exporter.New(*serverID, *serverFallback)
+		if err != nil {
+			log.Fatalf("failed to create speedtest exporter: %s", err)
+		}
+		r.MustRegister(exp)
+	case "bbk":
+		r.MustRegister(bbk.New(*bbkBinary))
+	default:
+		log.Fatalf("unknown backend: %s", *backend)
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`<html>
